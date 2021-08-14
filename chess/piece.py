@@ -45,6 +45,5 @@ class Piece:
     def erase(self):
         self.canvas.delete(self.img)
 
-
     def __repr__(self):
         return f"{self.color} {self.piece} {'unmoved' if self.unmoved else ''}"

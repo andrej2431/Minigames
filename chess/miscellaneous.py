@@ -1,4 +1,3 @@
-import time
 class VictoryScreen:
     def __init__(self, color, canvas):
         self.x = 405
@@ -12,9 +11,7 @@ class VictoryScreen:
         else:
             self.victory_text = "Draw"
 
-        self.text = canvas.create_text(self.x, self.y,fill=self.font_color, font=self.font, text=self.victory_text)
+        self.text = canvas.create_text(self.x, self.y, fill=self.font_color, font=self.font, text=self.victory_text)
 
     def erase(self):
         self.canvas.delete(self.text)
-
-

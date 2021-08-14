@@ -1,5 +1,4 @@
 import tkinter as tk
-from tkinter import font
 from functools import partial
 
 from piece import Piece
@@ -94,7 +93,7 @@ class Chess:
 
         piece_stack_height = self.canvas.create_rectangle(0, 0, 0, 0, fill="", width=0)
         chess_pieces = self.place_pieces()
-        self.state = BoardState(self.chessboard, chess_pieces,self.piece_images, piece_stack_height=piece_stack_height)
+        self.state = BoardState(self.chessboard, chess_pieces, self.piece_images, piece_stack_height=piece_stack_height)
 
     def mouse_press_tile(self, tile, event):
         if self.state.frozen:

@@ -5,7 +5,10 @@ from functools import partial
 class ChessMove:
     def __init__(self, start_tile, end_tile):
         self.piece = start_tile.piece
+        self.piece_snapshot = (self.piece.color, self.piece.piece, self.piece.unmoved)
         self.end_piece = end_tile.piece
+        self.end_piece_snapshot = None if not self.end_piece else (
+            self.end_piece.color, self.end_piece.piece, self.end_piece.unmoved)
         self.start_tile = start_tile
         self.end_tile = end_tile
         self.coords = (end_tile.x - start_tile.x, end_tile.y - start_tile.y)
@@ -67,8 +70,8 @@ class ChessMove:
             result_piece = tk.StringVar()
             result_piece.set("queen")
 
-            def close_toplevel(piece):
-                result_piece.set(piece)
+            def close_toplevel(picked_piece):
+                result_piece.set(picked_piece)
                 toplevel.destroy()
 
             for row, col, piece in zip((0, 0, 1, 1), (0, 1, 0, 1), ("rook", "knight", "bishop", "queen")):
@@ -88,6 +91,19 @@ class ChessMove:
             self.piece.piece = piece_name
             canvas.itemconfig(self.piece.img, image=state.piece_images[(self.piece.color, piece_name)])
             return True
+
+    def kill_if_en_passant(self,state):
+        def is_en_passant():
+            if not state.history:
+                return False
+            last_move = state.history[-1]
+            last_piece = last_move.piece_snapshot
+            other_tile = state.chessboard[self.start_tile.y][self.end_tile.x]
+            if last_move.end_tile is other_tile and last_piece[1] == "pawn" and abs(last_move.coords[1]) == 2:
+                return True
+            return False
+        if is_en_passant():
+            state.chessboard[self.start_tile.y][self.end_tile.x].erase_piece()
 
     def castle_if_castle(self, state):
         if not self.is_castle(state):
@@ -109,6 +125,7 @@ class ChessMove:
                     state.pieces[self.end_piece.color][i] = None
         self.end_tile.erase_piece()
         self.castle_if_castle(state)
+        self.kill_if_en_passant(state)
         self.start_tile.move_piece_to(self.end_tile)
         state.history.append(self)
         state.move_number += 1

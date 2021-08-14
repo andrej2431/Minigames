@@ -58,6 +58,16 @@ class Tile:
         return False
 
     def pawn_tiles(self, state, color=None):
+        def en_passant(result_tile):
+            if not state.history:
+                return False
+            last_move = state.history[-1]
+            last_piece = last_move.piece_snapshot
+            other_tile = state.chessboard[self.y][result_tile.x]
+            if last_move.end_tile is other_tile and last_piece[1] == "pawn" and abs(last_move.coords[1]) == 2:
+                return True
+            return False
+
         if not color or not self.piece:
             return []
 
@@ -68,7 +78,7 @@ class Tile:
             if not (0 <= new_x < 8 and 0 <= new_y < 8):
                 continue
             end_tile = state.chessboard[new_y][new_x]
-            if new_x != x and end_tile.piece and end_tile.piece.color != color:
+            if new_x != x and ((end_tile.piece and end_tile.piece.color != color) or en_passant(end_tile)):
                 tiles.append(end_tile)
             elif new_x == x and not end_tile.piece and (abs(new_y - y) == 1 or self.piece.unmoved):
                 tiles.append(end_tile)
