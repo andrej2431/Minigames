@@ -30,9 +30,18 @@ class ChessMove:
             state.pieces[self.end_piece.color][self.end_piece.piece] -= 1
         self.end_tile.erase_piece()
         self.start_tile.move_piece_to(self.end_tile)
+        state.history.append(self)
         state.next_turn()
+        if state.is_checked(state.turn):
+            if state.is_checkmated(state.turn):
+                print("Game Over")
+            else:
+                print(f"{state.turn} king in check!!")
 
     def __repr__(self):
         start = (self.start_tile.x, self.start_tile.y)
         end = (self.end_tile.x, self.end_tile.y)
-        return f"{self.piece.color} {self.piece.piece} from {start} to {end}."
+        captured = ""
+        if self.end_piece:
+            captured = self.end_piece.piece
+        return f"{self.piece.color} {self.piece.piece} from {start} to {captured} {end}."

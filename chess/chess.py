@@ -26,6 +26,7 @@ class Chess:
 
         self.canvas.bind("<B1-Motion>", self.mouse_moving_piece)
         self.canvas.bind("<ButtonRelease-1>", self.mouse_release_piece)
+        self.master.bind("h", self.show_history)
         self.canvas.mainloop()
 
     def create_board(self, white_color="white", black_color="black"):
@@ -76,8 +77,7 @@ class Chess:
             return
 
         self.state.selected = tile
-
-        self.canvas.lift(tile)
+        self.canvas.lift(tile.piece.img)
 
     def mouse_moving_piece(self, event):
         selected = self.state.selected
@@ -101,12 +101,17 @@ class Chess:
 
         if tile:
             chess_move = ChessMove(selected, tile)
-            print(chess_move)
             chess_move.attempt_move(self.state, self.canvas)
         else:
             selected.recall_piece()
             self.canvas.tag_lower(selected.piece.img, self.state.piece_stack_height)
         self.state.selected = None
+
+    def show_history(self,event):
+        print("History: ")
+        for move in self.state.history:
+            print(move)
+        print()
 
 
 def main():

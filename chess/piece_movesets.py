@@ -1,6 +1,4 @@
 def move_in_piece_moveset(piece, x_move, y_move):
-    print(x_move, y_move)
-
     movesets = {
         "pawn": ((0, 1), (0, 2), (1, 1)),
         "rook": ((0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7),
