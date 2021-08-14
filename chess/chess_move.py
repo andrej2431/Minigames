@@ -1,3 +1,7 @@
+import tkinter as tk
+from functools import partial
+
+
 class ChessMove:
     def __init__(self, start_tile, end_tile):
         self.piece = start_tile.piece
@@ -14,9 +18,12 @@ class ChessMove:
 
     def attempt_move(self, state, canvas):
         if self.is_valid(state) or self.is_castle(state):
-            self.execute(state)
+            self.execute(state, canvas)
         else:
             self.start_tile.recall_piece()
+
+        if state.move_number == 0:
+            return
         canvas.tag_lower(self.piece.img, state.piece_stack_height)
 
     def is_castle(self, state):
@@ -43,6 +50,45 @@ class ChessMove:
                 return True
         return False
 
+    def promote_if_pawn_promotion(self, state, canvas):
+
+        def is_pawn_promotion():
+            if self.piece.piece == "pawn":
+                if self.coords[1] > 0 and self.end_tile.y == 7:
+                    return True
+                elif self.coords[1] < 0 and self.end_tile.y == 0:
+                    return True
+            return False
+
+        def pawn_promotion_window():
+            toplevel = tk.Toplevel()
+            state.toplevel = toplevel
+
+            result_piece = tk.StringVar()
+            result_piece.set("queen")
+
+            def close_toplevel(piece):
+                result_piece.set(piece)
+                toplevel.destroy()
+
+            for row, col, piece in zip((0, 0, 1, 1), (0, 1, 0, 1), ("rook", "knight", "bishop", "queen")):
+                image = state.piece_images[(self.piece.color, piece)]
+                button = tk.Button(toplevel, image=image, command=partial(close_toplevel, piece))
+                button.grid(row=row, column=col)
+
+            state.frozen = True
+            canvas.wait_window(toplevel)
+            state.frozen = False
+            return result_piece.get()
+
+        if is_pawn_promotion():
+            piece_name = pawn_promotion_window()
+            if state.move_number == 0:
+                return
+            self.piece.piece = piece_name
+            canvas.itemconfig(self.piece.img, image=state.piece_images[(self.piece.color, piece_name)])
+            return True
+
     def castle_if_castle(self, state):
         if not self.is_castle(state):
             return
@@ -56,7 +102,7 @@ class ChessMove:
 
         rook_tile.move_piece_to(rook_end_tile)
 
-    def execute(self, state):
+    def execute(self, state, canvas):
         if self.end_piece:
             for i, piece in enumerate(state.pieces[self.end_piece.color]):
                 if piece is self.end_piece:
@@ -65,6 +111,12 @@ class ChessMove:
         self.castle_if_castle(state)
         self.start_tile.move_piece_to(self.end_tile)
         state.history.append(self)
+        state.move_number += 1
+
+        self.promote_if_pawn_promotion(state, canvas)
+
+        if state.move_number == 0:
+            return
 
         state.next_turn()
         if state.is_stalemate(state.turn):

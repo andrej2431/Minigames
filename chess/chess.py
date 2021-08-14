@@ -22,7 +22,7 @@ class Chess:
         self.tile_ids = {}
 
         self.create_board(white_color="white", black_color="saddle brown")
-
+        self.piece_images = Piece.load_images()
         self.canvas.bind("<B1-Motion>", self.mouse_moving_piece)
         self.canvas.bind("<ButtonRelease-1>", self.mouse_release_piece)
         self.master.bind("h", self.show_history)
@@ -52,7 +52,7 @@ class Chess:
         canvas.pack()
 
     def place_pieces(self):
-        piece_images = Piece.load_images()
+        piece_images = self.piece_images
 
         pieces = {"white": [], "black": []}
 
@@ -86,15 +86,20 @@ class Chess:
             self.canvas.delete(self.state.piece_stack_height)
             if self.state.victory_screen:
                 self.state.victory_screen.erase()
+            if self.state.toplevel:
+                self.state.toplevel.destroy()
         for x in range(8):
             for y in range(8):
                 self.chessboard[y][x].erase_piece()
 
         piece_stack_height = self.canvas.create_rectangle(0, 0, 0, 0, fill="", width=0)
         chess_pieces = self.place_pieces()
-        self.state = BoardState(self.chessboard, chess_pieces, piece_stack_height=piece_stack_height)
+        self.state = BoardState(self.chessboard, chess_pieces,self.piece_images, piece_stack_height=piece_stack_height)
 
     def mouse_press_tile(self, tile, event):
+        if self.state.frozen:
+            return
+
         if self.state.checkmate:
             return
 
@@ -108,6 +113,8 @@ class Chess:
         self.canvas.lift(tile.piece.img)
 
     def mouse_moving_piece(self, event):
+        if self.state.frozen:
+            return
         selected = self.state.selected
 
         if not selected:
@@ -115,6 +122,9 @@ class Chess:
         selected.piece.move_to(event.x, event.y)
 
     def mouse_release_piece(self, event):
+        if self.state.frozen:
+            return
+
         selected = self.state.selected
 
         if not selected:

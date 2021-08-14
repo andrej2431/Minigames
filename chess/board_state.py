@@ -1,7 +1,10 @@
 class BoardState:
-    def __init__(self, chessboard, pieces, turn="white", history=None, selected=None, piece_stack_height=0):
+    def __init__(self, chessboard, pieces, piece_images, turn="white", history=None, selected=None,
+                 piece_stack_height=0):
+
         self.chessboard = chessboard
         self.pieces = pieces
+        self.piece_images = piece_images
         self.tile_list = [tile for row in self.chessboard for tile in row]
         self.ongoing = True
         self.turn = turn
@@ -11,8 +14,9 @@ class BoardState:
         self.checkmate = False
         self.stalemate = False
         self.game_over = False
+        self.frozen = False
         self.victory_screen = None
-
+        self.toplevel = None
         self.selected = selected
         self.history = history if history else []
         self.piece_stack_height = piece_stack_height
@@ -24,8 +28,6 @@ class BoardState:
         else:
             self.turn = "white"
 
-        self.move_number += 1
-
     def is_checked(self, color):
         king_tile = self.find_king_tile(color)
         if king_tile.is_checked(color, self):
@@ -36,7 +38,7 @@ class BoardState:
     def check_around_king(self, color):
         king_tile = self.find_king_tile(color)
 
-        if king_tile.king_tiles(self,color):
+        if king_tile.king_tiles(self, color):
             return False
         else:
             return True
