@@ -1,16 +1,19 @@
 import tkinter as tk
+from tkinter import font
+from functools import partial
+
 from piece import Piece
 from tile import Tile
 from board_state import BoardState
 from chess_move import ChessMove
-from functools import partial
+from miscellaneous import *
 
 
 class Chess:
     def __init__(self):
         master = tk.Tk()
         self.size = 100
-        master.geometry("803x900+1000+0")  # TODO  remove the special window positioning
+        master.geometry("803x900+1000+0")
         master.resizable(0, 0)
         self.master = master
         self.canvas = tk.Canvas(master, width=800, height=800)
@@ -19,14 +22,16 @@ class Chess:
         self.tile_ids = {}
 
         self.create_board(white_color="white", black_color="saddle brown")
-        piece_stack_height = self.canvas.create_rectangle(0, 0, 0, 0, fill="", width=0)
-        self.place_pieces()
-
-        self.state = BoardState(self.chessboard, piece_stack_height=piece_stack_height)
 
         self.canvas.bind("<B1-Motion>", self.mouse_moving_piece)
         self.canvas.bind("<ButtonRelease-1>", self.mouse_release_piece)
         self.master.bind("h", self.show_history)
+
+        self.NewGame_Button = tk.Button(self.master, text="New Game", command=self.new_game)
+        self.NewGame_Button.pack()
+        self.state = None
+        self.new_game()
+
         self.canvas.mainloop()
 
     def create_board(self, white_color="white", black_color="black"):
@@ -49,17 +54,22 @@ class Chess:
     def place_pieces(self):
         piece_images = Piece.load_images()
 
+        pieces = {"white": [], "black": []}
+
         for x in range(8):
             self.chessboard[1][x].piece = Piece(self.canvas, (x, 1), "pawn", "black", piece_images)
+            pieces["black"].append(self.chessboard[1][x].piece)
 
         for x in range(8):
             self.chessboard[6][x].piece = Piece(self.canvas, (x, 6), "pawn", "white", piece_images)
+            pieces["white"].append(self.chessboard[6][x].piece)
 
         piece_names = ("rook", "knight", "bishop", "queen", "king", "bishop", "knight", "rook")
 
         for color, y in (("white", 7), ("black", 0)):
             for x, piece_name in enumerate(piece_names):
                 self.chessboard[y][x].piece = Piece(self.canvas, (x, y), piece_name, color, piece_images)
+                pieces[color].append(self.chessboard[y][x].piece)
 
         for y in range(8):
             for x in range(8):
@@ -69,7 +79,25 @@ class Chess:
 
                 self.tile_ids[tile.rect] = tile
 
+        return pieces
+
+    def new_game(self):
+        if self.state:
+            self.canvas.delete(self.state.piece_stack_height)
+            if self.state.victory_screen:
+                self.state.victory_screen.erase()
+        for x in range(8):
+            for y in range(8):
+                self.chessboard[y][x].erase_piece()
+
+        piece_stack_height = self.canvas.create_rectangle(0, 0, 0, 0, fill="", width=0)
+        chess_pieces = self.place_pieces()
+        self.state = BoardState(self.chessboard, chess_pieces, piece_stack_height=piece_stack_height)
+
     def mouse_press_tile(self, tile, event):
+        if self.state.checkmate:
+            return
+
         if not tile.piece:  # no piece inn pressed tile
             return
         piece = tile.piece
@@ -107,7 +135,13 @@ class Chess:
             self.canvas.tag_lower(selected.piece.img, self.state.piece_stack_height)
         self.state.selected = None
 
-    def show_history(self,event):
+        if self.state.game_over:
+            victory_color = None
+            if self.state.checkmate:
+                victory_color = "white" if self.state.turn == "black" else "black"
+            self.state.victory_screen = VictoryScreen(victory_color, self.canvas)
+
+    def show_history(self, event):
         print("History: ")
         for move in self.state.history:
             print(move)

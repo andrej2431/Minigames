@@ -33,6 +33,7 @@ class Piece:
         self.y = self.y * size + size // 2
         self.piece = piece
         self.color = color
+        self.unmoved = True
         self.loaded_image = piece_images[(color, piece)]
         self.canvas = canvas
         self.img = canvas.create_image(self.x, self.y, image=self.loaded_image)
@@ -46,4 +47,4 @@ class Piece:
 
 
     def __repr__(self):
-        return f"{self.color} {self.piece}"
+        return f"{self.color} {self.piece} {'unmoved' if self.unmoved else ''}"
