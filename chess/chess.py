@@ -1,11 +1,11 @@
 import tkinter as tk
 from functools import partial
 
-from piece import Piece
-from tile import Tile
 from board_state import BoardState
 from chess_move import ChessMove
 from miscellaneous import *
+from piece import Piece
+from tile import Tile
 
 
 class Chess:
@@ -16,6 +16,7 @@ class Chess:
         master.resizable(0, 0)
         self.master = master
         self.canvas = tk.Canvas(master, width=800, height=800)
+        self.frame = tk.Frame(master, width=800, height=100)
 
         self.chessboard: list = [[Tile(x, y, self.canvas) for x in range(8)]
                                  for y in range(8)]
@@ -49,16 +50,28 @@ class Chess:
                 tile_is_white = not tile_is_white
             tile_is_white = not tile_is_white
         canvas.pack()
+        self.frame.pack()
 
     def create_menu(self):
-        new_game_button = tk.Button(self.master, text="New Game", command=self.new_game)
-        resign_button = tk.Button(self.master, text="Resign", command=self.resign)
-        undo_button = tk.Button(self.master, text="Undo", command=self.undo)
-        draw_button = tk.Button(self.master, text="Draw", command=self.draw)
-        new_game_button.pack()
-        resign_button.pack()
-        undo_button.pack()
-        draw_button.pack()
+
+        bg = "indian red"
+        width = 15
+        height = 3
+        pady = 10
+        padx = 10
+        font = ("Nimbus Roman", 15, "normal")
+        new_game_button = tk.Button(self.frame, text=" New Game", command=self.new_game, bg=bg, width=width,
+                                    height=height, font=font, anchor='c')
+        resign_button = tk.Button(self.frame, text="  Resign", command=self.resign, bg=bg, width=width, height=height,
+                                  font=font)
+        undo_button = tk.Button(self.frame, text=" Undo", command=self.undo, bg=bg, width=width, height=height,
+                                font=font)
+        draw_button = tk.Button(self.frame, text=" Draw", command=self.draw, bg=bg, width=width, height=height,
+                                font=font)
+        new_game_button.grid(row=0, column=0, padx=padx, pady=pady)
+        resign_button.grid(row=0, column=1, padx=padx, pady=pady)
+        undo_button.grid(row=0, column=2, padx=padx, pady=pady)
+        draw_button.grid(row=0, column=3, padx=padx, pady=pady)
 
     def create_victory_screen(self):
         if self.state.victory_screen:
@@ -102,7 +115,6 @@ class Chess:
 
         self.state.turn = "white" if self.state.turn != "white" else "black"
         self.state.history.pop(-1)
-        print(move)
 
     def draw(self):
         state = self.state

@@ -8,8 +8,8 @@ class Tile:
 
         diff = 10
         self.circle = canvas.create_oval(x * size + diff, y * size + diff,
-                                         (x + 1) * size-diff, (y + 1) * size - diff,
-                                         fill="",width=10,outline="light grey")
+                                         (x + 1) * size - diff, (y + 1) * size - diff,
+                                         fill="", width=10, outline="light grey")
         self.rect = canvas.create_rectangle(x * size, y * size,
                                             (x + 1) * size, (y + 1) * size,
                                             fill="", width=0, tag="tile")
@@ -138,7 +138,7 @@ class Tile:
         return tiles
 
     @classmethod
-    def is_castle(cls,start_tile, coords,state):
+    def is_castle(cls, start_tile, coords, state):
         piece = start_tile.piece
 
         if piece.piece == "king" and piece.unmoved and not start_tile.is_checked(piece.color, state):
@@ -161,7 +161,6 @@ class Tile:
 
     def king_tiles(self, state, color=None):
 
-
         tiles = []
         tiles_around = ((0, 1), (0, -1), (1, -1), (1, 0), (1, 1), (-1, -1), (-1, 0), (-1, 1))
         for around_x, around_y in tiles_around:
@@ -175,14 +174,13 @@ class Tile:
                         around_piece and around_piece.color == color)):
                     tiles.append(around_tile)
 
-        for coords in ((-2,0),(2,0)):
-            if not 0<=self.x+coords[0]<8:
+        for coords in ((-2, 0), (2, 0)):
+            if not 0 <= self.x + coords[0] < 8:
                 continue
-            if Tile.is_castle(self,coords,state):
-                tiles.append(state.chessboard[self.y][self.x+coords[0]])
+            if Tile.is_castle(self, coords, state):
+                tiles.append(state.chessboard[self.y][self.x + coords[0]])
 
         return tiles
-
 
     def available_tiles_from_piece(self, state):
         if not self.piece:

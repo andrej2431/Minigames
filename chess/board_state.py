@@ -83,7 +83,6 @@ class BoardState:
             self.game_over = True
             self.game_result = 4
 
-
     def is_checked(self, color):
         king_tile = self.find_king_tile(color)
         if king_tile.is_checked(color, self):
