@@ -70,8 +70,8 @@ class Chess:
                                 font=font)
         new_game_button.grid(row=0, column=0, padx=padx, pady=pady)
         resign_button.grid(row=0, column=1, padx=padx, pady=pady)
-        undo_button.grid(row=0, column=2, padx=padx, pady=pady)
-        draw_button.grid(row=0, column=3, padx=padx, pady=pady)
+        undo_button.grid(row=0, column=3, padx=padx, pady=pady)
+        draw_button.grid(row=0, column=2, padx=padx, pady=pady)
 
     def create_victory_screen(self):
         if self.state.victory_screen:
