@@ -128,4 +128,4 @@ class ChessMove:
         captured = ""
         if self.end_piece:
             captured = self.end_piece.piece
-        return f"{self.piece.color} {self.piece.piece} from {start} to {captured} {end}."
+        return f"{self.piece.color} {self.piece_snapshot[1]} from {start} to {captured} {end}."
