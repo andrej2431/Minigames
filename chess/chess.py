@@ -93,13 +93,11 @@ class Chess:
 
         piece_stack_height = self.canvas.create_rectangle(0, 0, 0, 0, fill="", width=0)
         chess_pieces = self.place_pieces()
-        self.state = BoardState(self.chessboard, chess_pieces, self.piece_images, piece_stack_height=piece_stack_height)
+        self.state = BoardState(self.chessboard, chess_pieces, self.piece_images,
+                                piece_stack_height=piece_stack_height)
 
     def mouse_press_tile(self, tile, event):
-        if self.state.frozen:
-            return
-
-        if self.state.checkmate:
+        if self.state.frozen or self.state.game_over:
             return
 
         if not tile.piece:  # no piece inn pressed tile
@@ -112,7 +110,7 @@ class Chess:
         self.canvas.lift(tile.piece.img)
 
     def mouse_moving_piece(self, event):
-        if self.state.frozen:
+        if self.state.frozen or self.state.game_over:
             return
         selected = self.state.selected
 
@@ -145,10 +143,8 @@ class Chess:
         self.state.selected = None
 
         if self.state.game_over:
-            victory_color = None
-            if self.state.checkmate:
-                victory_color = "white" if self.state.turn == "black" else "black"
-            self.state.victory_screen = VictoryScreen(victory_color, self.canvas)
+            last_color = "white" if self.state.turn != "white" else "black"
+            self.state.victory_screen = VictoryScreen(self.state.game_result, last_color, self.canvas)
 
     def show_history(self, event):
         print("History: ")

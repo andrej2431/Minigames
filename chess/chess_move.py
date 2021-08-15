@@ -1,6 +1,6 @@
 import tkinter as tk
 from functools import partial
-
+import time
 
 class ChessMove:
     def __init__(self, start_tile, end_tile):
@@ -29,6 +29,26 @@ class ChessMove:
             return
         canvas.tag_lower(self.piece.img, state.piece_stack_height)
 
+    def execute(self, state, canvas):
+        if self.end_piece:
+            for i, piece in enumerate(state.pieces[self.end_piece.color]):
+                if piece is self.end_piece:
+                    state.pieces[self.end_piece.color][i] = None
+        self.end_tile.erase_piece()
+        self.castle_if_castle(state)
+        self.kill_if_en_passant(state)
+        self.start_tile.move_piece_to(self.end_tile)
+        state.history.append(self)
+        state.move_number += 1
+
+        self.promote_if_pawn_promotion(state, canvas)
+
+        if state.move_number == 0:
+            return
+
+        state.next_turn()
+        state.turn_result()
+
     def is_castle(self, state):
         piece = self.piece
         start_tile = self.start_tile
@@ -43,11 +63,8 @@ class ChessMove:
 
             if rook_tile.piece and rook_tile.piece.piece == "rook" and rook_tile.piece.unmoved:
                 sign = (rook_tile.x - start_tile.x) // abs((rook_tile.x - start_tile.x))
-                print(start_tile.x, rook_tile.x, sign)
                 for x in range(start_tile.x + sign, rook_tile.x, sign):
-                    print(x)
                     tile = state.chessboard[start_tile.y][x]
-                    print(tile)
                     if tile.piece or tile.is_checked(piece.color, state):
                         return False
                 return True
@@ -118,38 +135,6 @@ class ChessMove:
 
         rook_tile.move_piece_to(rook_end_tile)
 
-    def execute(self, state, canvas):
-        if self.end_piece:
-            for i, piece in enumerate(state.pieces[self.end_piece.color]):
-                if piece is self.end_piece:
-                    state.pieces[self.end_piece.color][i] = None
-        self.end_tile.erase_piece()
-        self.castle_if_castle(state)
-        self.kill_if_en_passant(state)
-        self.start_tile.move_piece_to(self.end_tile)
-        state.history.append(self)
-        state.move_number += 1
-
-        self.promote_if_pawn_promotion(state, canvas)
-
-        if state.move_number == 0:
-            return
-
-        state.next_turn()
-        if state.is_stalemate(state.turn):
-            state.game_over = True
-
-        if state.is_checked(state.turn):
-            state.check = True
-            if state.is_stalemate(state.turn):
-                state.checkmate = True
-                state.game_over = True
-        elif state.is_stalemate(state.turn):
-            state.stalemate = True
-            state.game_over = True
-
-        else:
-            state.check = False
 
     def __repr__(self):
         start = (self.start_tile.x, self.start_tile.y)
