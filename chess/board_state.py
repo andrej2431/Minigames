@@ -14,9 +14,13 @@ class BoardState:
         self.game_result = 0
         self.game_over = False
         self.frozen = False
+
         self.victory_screen = None
         self.toplevel = None
+
         self.selected = selected
+        self.available_tiles = []
+
         self.history = history if history else []
         self.repetition_history = []
         self.piece_stack_height = piece_stack_height
@@ -78,6 +82,7 @@ class BoardState:
         elif insufficient_material():
             self.game_over = True
             self.game_result = 4
+
 
     def is_checked(self, color):
         king_tile = self.find_king_tile(color)

@@ -6,8 +6,13 @@ class Tile:
         self.size = size
         self.canvas = canvas
 
-        self.rect = canvas.create_rectangle(x * size, y * size, (x + 1) * size, (y + 1) * size, fill="", width=0,
-                                            tag="tile")
+        diff = 10
+        self.circle = canvas.create_oval(x * size + diff, y * size + diff,
+                                         (x + 1) * size-diff, (y + 1) * size - diff,
+                                         fill="",width=10,outline="light grey")
+        self.rect = canvas.create_rectangle(x * size, y * size,
+                                            (x + 1) * size, (y + 1) * size,
+                                            fill="", width=0, tag="tile")
 
     def recall_piece(self):
         if not self.piece:
@@ -132,7 +137,31 @@ class Tile:
                     break
         return tiles
 
+    @classmethod
+    def is_castle(cls,start_tile, coords,state):
+        piece = start_tile.piece
+
+        if piece.piece == "king" and piece.unmoved and not start_tile.is_checked(piece.color, state):
+            if coords == (2, 0):
+                rook_x = start_tile.x + 3
+            elif coords == (-2, 0):
+                rook_x = start_tile.x - 4
+            else:
+                return False
+            rook_tile = state.chessboard[start_tile.y][rook_x]
+
+            if rook_tile.piece and rook_tile.piece.piece == "rook" and rook_tile.piece.unmoved:
+                sign = (rook_tile.x - start_tile.x) // abs((rook_tile.x - start_tile.x))
+                for x in range(start_tile.x + sign, rook_tile.x, sign):
+                    tile = state.chessboard[start_tile.y][x]
+                    if tile.piece or tile.is_checked(piece.color, state):
+                        return False
+                return True
+        return False
+
     def king_tiles(self, state, color=None):
+
+
         tiles = []
         tiles_around = ((0, 1), (0, -1), (1, -1), (1, 0), (1, 1), (-1, -1), (-1, 0), (-1, 1))
         for around_x, around_y in tiles_around:
@@ -145,7 +174,15 @@ class Tile:
                 if not (around_tile.is_checked(color, state) or (
                         around_piece and around_piece.color == color)):
                     tiles.append(around_tile)
+
+        for coords in ((-2,0),(2,0)):
+            if not 0<=self.x+coords[0]<8:
+                continue
+            if Tile.is_castle(self,coords,state):
+                tiles.append(state.chessboard[self.y][self.x+coords[0]])
+
         return tiles
+
 
     def available_tiles_from_piece(self, state):
         if not self.piece:
@@ -167,6 +204,7 @@ class Tile:
 
         elif piece.piece == "king":
             available_tiles = self.king_tiles(state, color=piece.color)
+
         else:
             available_tiles = []
 
@@ -185,6 +223,12 @@ class Tile:
             tile.piece = temp_piece
 
         return check_proof_tiles
+
+    def show_circle(self):
+        self.canvas.tag_raise(self.circle, self.rect)
+
+    def hide_circle(self):
+        self.canvas.tag_lower(self.circle, 1)
 
     def __repr__(self):
         return f"Tile({self.x},{self.y}):{self.piece}"

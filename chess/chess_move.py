@@ -1,6 +1,6 @@
 import tkinter as tk
 from functools import partial
-import time
+from tile import Tile
 
 class ChessMove:
     def __init__(self, start_tile, end_tile):
@@ -12,7 +12,8 @@ class ChessMove:
         self.start_tile = start_tile
         self.end_tile = end_tile
         self.coords = (end_tile.x - start_tile.x, end_tile.y - start_tile.y)
-
+        self.en_passant = None
+        self.castle_rook = None
     def is_valid(self, state):
         if self.end_tile in self.start_tile.available_tiles_from_piece(state):
             return True
@@ -20,12 +21,12 @@ class ChessMove:
             return False
 
     def attempt_move(self, state, canvas):
-        if self.is_valid(state) or self.is_castle(state):
+        if self.is_valid(state):
             self.execute(state, canvas)
         else:
             self.start_tile.recall_piece()
 
-        if state.move_number == 0:
+        if state.move_number == 0 or state.game_over:
             return
         canvas.tag_lower(self.piece.img, state.piece_stack_height)
 
@@ -43,32 +44,13 @@ class ChessMove:
 
         self.promote_if_pawn_promotion(state, canvas)
 
-        if state.move_number == 0:
+        if state.move_number == 0 or state.game_over:
             return
 
         state.next_turn()
         state.turn_result()
 
-    def is_castle(self, state):
-        piece = self.piece
-        start_tile = self.start_tile
-        if piece.piece == "king" and piece.unmoved and not start_tile.is_checked(piece.color, state):
-            if self.coords == (2, 0):
-                rook_x = start_tile.x + 3
-            elif self.coords == (-2, 0):
-                rook_x = start_tile.x - 4
-            else:
-                return False
-            rook_tile = state.chessboard[start_tile.y][rook_x]
 
-            if rook_tile.piece and rook_tile.piece.piece == "rook" and rook_tile.piece.unmoved:
-                sign = (rook_tile.x - start_tile.x) // abs((rook_tile.x - start_tile.x))
-                for x in range(start_tile.x + sign, rook_tile.x, sign):
-                    tile = state.chessboard[start_tile.y][x]
-                    if tile.piece or tile.is_checked(piece.color, state):
-                        return False
-                return True
-        return False
 
     def promote_if_pawn_promotion(self, state, canvas):
 
@@ -103,7 +85,7 @@ class ChessMove:
 
         if is_pawn_promotion():
             piece_name = pawn_promotion_window()
-            if state.move_number == 0:
+            if state.move_number == 0 or state.game_over:
                 return
             self.piece.piece = piece_name
             canvas.itemconfig(self.piece.img, image=state.piece_images[(self.piece.color, piece_name)])
@@ -120,10 +102,12 @@ class ChessMove:
                 return True
             return False
         if is_en_passant():
-            state.chessboard[self.start_tile.y][self.end_tile.x].erase_piece()
+            tile = state.chessboard[self.start_tile.y][self.end_tile.x]
+            self.en_passant = (tile,tile.piece)
+            tile.erase_piece()
 
     def castle_if_castle(self, state):
-        if not self.is_castle(state):
+        if not Tile.is_castle(self.start_tile,self.coords,state):
             return
 
         if self.coords[0] == 2:
@@ -133,6 +117,7 @@ class ChessMove:
             rook_tile = state.chessboard[self.start_tile.y][self.start_tile.x - 4]
             rook_end_tile = state.chessboard[self.start_tile.y][self.start_tile.x - 1]
 
+        self.castle_rook = (rook_tile,rook_end_tile)
         rook_tile.move_piece_to(rook_end_tile)
 
 
